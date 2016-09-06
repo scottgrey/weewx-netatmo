@@ -42,7 +42,7 @@ import weewx.units
 import weewx.wxformulas
 
 DRIVER_NAME = 'netatmo'
-DRIVER_VERSION = "0.2"
+DRIVER_VERSION = "0.4"
 
 INHG_PER_MBAR = 0.0295299830714
 MM_PER_IN = 25.4
@@ -125,22 +125,26 @@ class NetatmoDriver(weewx.drivers.AbstractDevice):
         '*.NAMain.wifi_status': 'wifi_status',
         '*.NAModule1.Temperature': 'outTemp',
         '*.NAModule1.Humidity': 'outHumidity',
-        '*.NAModule1.rf_status': 'rf_status',
+        '*.NAModule1.rf_status': 'out_rf_status',
+        '*.NAModule1.battery_vp': 'out_battery_vp',
         '*.NAModule1.battery_percent': 'outTempBatteryStatus',
         '*.NAModule4.Temperature': 'extraTemp1',
         '*.NAModule4.Humidity': 'extraHumid1',
-        '*.NAModule4.rf_status': 'rf_status',
-        '*.NAModule4.battery_vp': 'battery_vp',
+        '*.NAModule4.rf_status': 'extra_rf_status_1',
+        '*.NAModule4.battery_vp': 'extra_battery_vp_1',
+        '*.NAModule4.battery_percent': 'extra1BatteryStatus',
         '*.NAModule2.WindStrength': 'windSpeed',
         '*.NAModule2.WindAngle': 'windDir',
         '*.NAModule2.GustStrength': 'windGust',
         '*.NAModule2.GustAngle': 'windGustDir',
-        '*.NAModule2.rf_status': 'rf_status',
-        '*.NAModule2.battery_vp': 'battery_vp',
+        '*.NAModule2.rf_status': 'wind_rf_status',
+        '*.NAModule2.battery_vp': 'wind_battery_vp',
+        '*.NAModule2.battery_percent': 'windBatteryStatus',
         '*.NAModule3.Rain': 'rain',
         #'*.NAModule3.sum_rain_1': 'rainRate',
         '*.NAModule3.sum_rain_24': 'rain_total',
-        '*.NAModule3.rf_status': 'rf_status',
+        '*.NAModule3.rf_status': 'rain_rf_status',
+        '*.NAModule3.battery_vp': 'rain_battery_vp',
         '*.NAModule3.battery_percent': 'rainBatteryStatus'}
 
     def __init__(self, **stn_dict):
@@ -302,7 +306,8 @@ class CloudClient(Collector):
         'WindStrength', 'WindAngle', 'GustStrength', 'GustAngle']
     META_ITEMS = [
         'wifi_status', 'rf_status', 'battery_vp', 'co2_calibrating',
-        '_id', 'module_name', 'last_status_store', 'last_seen', 'battery_percent',
+        '_id', 'module_name', 'last_status_store', 'last_seen',
+        'battery_percent',
         'firmware', 'last_setup', 'last_upgrade', 'date_setup']
 
     def __init__(self, username, password, client_id, client_secret,
@@ -331,8 +336,8 @@ class CloudClient(Collector):
                         logerr("failed attempt %s of %s to get data: %s" %
                                (tries + 1, self._max_tries, e))
                         logdbg("waiting %s seconds before retry" %
-                               self.retry_wait)
-                        time.sleep(self.retry_wait)
+                               self._retry_wait)
+                        time.sleep(self._retry_wait)
                         continue
                 else:
                     logerr("failed to get data after %d attempts" %
